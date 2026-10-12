@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Maids.cc · Office Staff Payroll (Mobile v3)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --brand-blue:#3f66b0; --brand-blue-dark:#33528f; --brand-orange:#e89028;
+    --primary:#6366f1; --primary-hover:#4f46e5; --primary-soft:#eef0fe; --primary-softer:#f5f6ff;
+    --success:#0f9d58; --success-soft:#e7f6ed; --danger:#dc2626; --danger-soft:#fdeaea; --warn:#b45309;
+    --bg:#f4f5fb; --surface:#fff; --line:#e7e8f0; --line-strong:#d7d9e6;
+    --ink:#1e2130; --ink-soft:#4a4f63; --muted:#7c8195; --muted-2:#9aa0b4;
+    --shadow-sm:0 1px 2px rgba(30,33,48,.05),0 1px 3px rgba(30,33,48,.06);
+    --shadow-md:0 8px 24px rgba(30,33,48,.08),0 2px 6px rgba(30,33,48,.05);
+    --shadow-pop:0 -10px 40px rgba(0,0,0,.22);
+    --tnum:"tnum" 1,"lnum" 1;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:#e9ebf4;color:var(--ink);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  .num{font-feature-settings:var(--tnum);font-variant-numeric:tabular-nums}
+  .device{max-width:520px;margin:0 auto;min-height:100dvh;background:var(--bg);position:relative;box-shadow:0 0 40px rgba(0,0,0,.06)}
+  .topbar{position:sticky;top:0;z-index:40;background:rgba(255,255,255,.92);backdrop-filter:saturate(160%) blur(10px);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;padding-top:max(12px,env(safe-area-inset-top))}
+  .logo{font-weight:800;font-size:24px;letter-spacing:-.8px;color:#3f66b0;line-height:1}
+  .logo small{display:block;font-size:7px;font-weight:700;letter-spacing:0;color:var(--brand-orange);margin-top:1px}
+  .pending-pill{display:inline-flex;align-items:center;gap:7px;background:var(--primary-soft);color:var(--primary-hover);border:1px solid #dcdefb;border-radius:999px;padding:6px 11px;font-weight:700;font-size:12px;white-space:nowrap}
+  .pending-pill .dot{width:7px;height:7px;border-radius:50%;background:var(--primary);box-shadow:0 0 0 4px rgba(99,102,241,.18)}
+  .pagehead{padding:16px 16px 8px}
+  .eyebrow{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--brand-blue)}
+  .pagehead h1{font-size:20px;font-weight:800;margin:3px 0 4px;letter-spacing:-.02em;line-height:1.2}
+  .pagehead p{margin:0;font-size:13px;color:var(--muted);line-height:1.5}
+  .list{padding:10px 10px 100px}
+  .section{background:var(--surface);border:1px solid var(--line);border-radius:16px;margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow-sm)}
+  .section.open{box-shadow:var(--shadow-md)}
+  .sec-head{display:flex;align-items:center;gap:12px;width:100%;border:0;background:transparent;padding:15px 16px;cursor:pointer;font-family:inherit;color:inherit;text-align:left;min-height:58px}
+  .sec-head:focus-visible{outline:3px solid rgba(99,102,241,.4);outline-offset:-3px}
+  .sec-icon{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;flex:none}
+  .sec-icon svg{width:19px;height:19px}
+  .icn-raise{background:var(--success-soft);color:var(--success)}
+  .icn-bonus{background:#fff2e0;color:var(--brand-orange)}
+  .icn-hire{background:#e9edf9;color:var(--brand-blue)}
+  .icn-term{background:var(--danger-soft);color:var(--danger)}
+  .icn-other{background:var(--primary-soft);color:var(--primary)}
+  .sec-title{flex:1;font-size:15px;font-weight:700;min-width:0;letter-spacing:-.01em}
+  .count-badge{min-width:24px;height:24px;padding:0 8px;border-radius:999px;background:var(--primary);color:#fff;font-size:12.5px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex:none}
+  .count-badge.zero{background:#e5e7f0;color:var(--muted)}
+  .chev{width:20px;height:20px;color:var(--muted-2);flex:none;transition:transform .28s ease}
+  .section.open .chev{transform:rotate(180deg)}
+  .sec-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s ease}
+  .section.open .sec-body{grid-template-rows:1fr}
+  .sec-body > .inner{overflow:hidden;min-height:0}
+  .toolbar{display:flex;gap:8px;padding:12px 14px;border-top:1px solid var(--line)}
+  .toolbar .btn{flex:1;font-size:12px;padding:11px 6px;line-height:1.2;white-space:nowrap;text-align:center;overflow:hidden;text-overflow:ellipsis}
+  .cards{padding:4px 12px 14px}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-family:inherit;font-weight:600;border-radius:10px;border:1px solid transparent;transition:filter .15s,background .15s,transform .08s,border-color .15s;-webkit-tap-highlight-color:transparent}
+  .btn svg{width:15px;height:15px;flex:none}
+  .btn:active{transform:scale(.97)}
+  .btn:focus-visible{outline:3px solid rgba(99,102,241,.4);outline-offset:2px}
+  .btn-primary{background:var(--primary);color:#fff}
+  .btn-primary:disabled{background:#c9cbf4;opacity:.85;cursor:not-allowed}
+  .btn-ghost{background:#fff;color:var(--ink-soft);border-color:var(--line-strong)}
+  .btn-ghost:disabled{opacity:.5;cursor:not-allowed}
+  .btn-danger{background:var(--danger);color:#fff}
+  .btn-lg{padding:13px 20px;font-size:15px;border-radius:12px;min-height:48px}
+  .rcard{border:1px solid var(--line);border-radius:14px;background:#fff;padding:13px;margin:10px 0;transition:border-color .15s,background .15s}
+  .rcard.selected{border-color:var(--primary);background:var(--primary-softer);box-shadow:inset 0 0 0 1px var(--primary)}
+  .rc-top{display:flex;align-items:flex-start;gap:9px}
+  .rc-check{flex:none;padding-top:1px}
+  .avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#e9edf9,#dbe0f2);color:#9aa2c6;display:grid;place-items:center;flex:none;overflow:hidden}
+  .avatar svg{width:20px;height:20px}
+  .rc-headtext{flex:1;min-width:0}
+  .rc-name{font-weight:700;font-size:15px;line-height:1.25;color:var(--ink)}
+  .rc-sub{font-size:12.5px;color:var(--muted);margin-top:2px}
+  .rc-amtwrap{flex:none;text-align:right;padding-left:6px}
+  .rc-amt{display:inline-flex;align-items:center;gap:3px;font-weight:800;font-size:19px;white-space:nowrap;color:var(--ink)}
+  .rc-amt svg{width:13px;height:13px}
+  .rc-amt .cur{font-size:12.5px;margin-right:0}
+  .rc-amt.up{color:var(--success)} .rc-amt.down{color:var(--danger)}
+  .rc-cap{font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted-2);font-weight:600;margin-top:3px}
+  .rc-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:11px}
+  .type-tag{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px;white-space:nowrap}
+  .type-tag svg{width:12px;height:12px}
+  .tag-bonus{background:var(--success-soft);color:var(--success)}
+  .tag-deduct{background:var(--danger-soft);color:var(--danger)}
+  .tag-loan{background:var(--primary-soft);color:var(--primary-hover)}
+  .tag-switch{background:#e9edf9;color:var(--brand-blue-dark)}
+  .tag-neutral{background:#eef0f5;color:var(--ink-soft)}
+  .hire-tag{background:#e9edf9;color:var(--brand-blue-dark)}
+  .chip{font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px;background:#eef0f5;color:var(--ink-soft)}
+  .rc-meta{margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px 12px}
+  .mi{min-width:0}
+  .mi.wide{grid-column:1 / -1}
+  .mi-l{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted-2);font-weight:600}
+  .mi-v{font-size:13px;color:var(--ink-soft);font-weight:500;margin-top:1px;word-break:break-word}
+  .mi-v.ital{font-style:italic;color:var(--muted)}
+  .mi-v.total{font-size:15px;font-weight:800;color:var(--success)}
+  .rc-note{margin-top:12px;font-size:12.5px;color:var(--muted);font-style:italic;line-height:1.5}
+  .rc-actions{display:flex;gap:8px;margin-top:14px}
+  .rc-actions .btn{flex:1;padding:11px;font-size:13.5px;min-height:44px}
+  .act-approve{background:var(--success);color:#fff}
+  .act-approve:hover{filter:brightness(.96)}
+  .act-reject{background:#fff;color:var(--danger);border:1px solid #f2c2c2}
+  .act-reject:hover{background:var(--danger-soft)}
+  .act-take{background:var(--primary);color:#fff}
+  .act-take:hover{background:var(--primary-hover)}
+  .act-seen{background:#fff;color:var(--primary-hover);border:1px solid #cdd0f7}
+  .act-seen:hover{background:var(--primary-soft)}
+  .cbx{position:relative;display:inline-flex;width:22px;height:22px;cursor:pointer}
+  .cbx input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer}
+  .cbx .box{width:22px;height:22px;border-radius:6px;border:2px solid var(--line-strong);background:#fff;transition:all .15s;display:grid;place-items:center}
+  .cbx .box svg{width:14px;height:14px;color:#fff;opacity:0;transform:scale(.6);transition:all .15s}
+  .cbx input:checked + .box{background:var(--primary);border-color:var(--primary)}
+  .cbx input:checked + .box svg{opacity:1;transform:scale(1)}
+  .cbx input:focus-visible + .box{outline:3px solid rgba(99,102,241,.4);outline-offset:2px}
+  .empty{display:flex;flex-direction:column;align-items:center;gap:8px;padding:32px 16px;color:var(--muted);text-align:center}
+  .empty svg{width:30px;height:30px;color:var(--success)}
+  .empty b{color:var(--ink-soft);font-size:14px;font-weight:600}
+  .empty span{font-size:12.5px}
+  .scrim{position:fixed;inset:0;background:rgba(23,25,38,.55);z-index:100;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .22s ease}
+  .scrim.show{opacity:1;pointer-events:auto}
+  .sheet{width:100%;max-width:520px;background:#fff;border-radius:22px 22px 0 0;box-shadow:var(--shadow-pop);transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1);max-height:92dvh;overflow-y:auto;position:relative}
+  .scrim.show .sheet{transform:translateY(0)}
+  .sheet-grip{width:40px;height:4px;border-radius:2px;background:var(--line-strong);margin:9px auto 0}
+  .modal-close{position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:10px;border:0;background:transparent;color:var(--muted);cursor:pointer;display:grid;place-items:center;z-index:2;transition:background .14s,color .14s}
+  .modal-close:hover{background:#f1f2f7;color:var(--ink)}
+  .modal-close svg{width:18px;height:18px}
+  .sheet-pad{padding:10px 20px calc(24px + env(safe-area-inset-bottom))}
+  .tm-top{display:flex;align-items:center;gap:13px;margin:6px 34px 16px 0}
+  .tm-avatar{width:46px;height:46px;border-radius:12px;background:var(--danger-soft);color:var(--danger);display:grid;place-items:center;flex:none}
+  .tm-avatar svg{width:22px;height:22px}
+  .tm-name{font-size:18px;font-weight:800;letter-spacing:-.01em;color:var(--ink)}
+  .tm-meta{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.5}
+  .tm-lead{font-size:13.5px;line-height:1.6;color:var(--ink-soft);margin:0 0 16px}
+  .tm-calc{border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .tm-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 15px;font-size:14px;color:var(--ink-soft)}
+  .tm-row + .tm-row{border-top:1px solid var(--line)}
+  .tm-row .num{font-weight:600;color:var(--ink)}
+  .tm-row em{font-style:italic;color:var(--muted);font-size:12.5px}
+  .tm-edit{background:#fafbff;flex-wrap:wrap}
+  .tm-edit label{font-weight:600;color:var(--ink);font-size:13.5px}
+  .tm-total{background:var(--success-soft)}
+  .tm-total span:first-child{color:var(--ink);font-weight:700}
+  .tm-total .num{color:var(--success);font-size:17px;font-weight:800}
+  .tm-actions{display:flex;gap:12px;margin-top:20px}
+  .tm-actions .btn{flex:1}
+  .req{color:var(--danger)}
+  .amount-input{display:inline-flex;align-items:stretch;border:1.5px solid var(--line-strong);border-radius:11px;overflow:hidden;transition:border-color .15s,box-shadow .15s}
+  .amount-input:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px rgba(99,102,241,.18)}
+  .amount-input input{border:0;outline:0;font-family:inherit;font-size:17px;font-weight:700;color:var(--ink);padding:10px 13px;width:110px;font-feature-settings:var(--tnum)}
+  .amount-input input::-webkit-outer-spin-button,.amount-input input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  .amount-input input[type=number]{-moz-appearance:textfield;appearance:textfield}
+  .amount-input .cur-box{display:flex;align-items:center;padding:0 14px;background:#f1f2f7;border-left:1.5px solid var(--line-strong);font-weight:700;font-size:13px;color:var(--ink-soft)}
+  .reject-pad{text-align:center}
+  .rj-icon{width:56px;height:56px;border-radius:50%;background:var(--danger-soft);color:var(--danger);display:grid;place-items:center;margin:6px auto 16px}
+  .rj-icon svg{width:26px;height:26px}
+  .rj-title{margin:0 0 8px;font-size:20px;font-weight:800;letter-spacing:-.01em;color:var(--ink)}
+  .rj-desc{margin:0 0 20px;font-size:14px;line-height:1.6;color:var(--ink-soft)}
+  .field-label{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:8px;display:block;text-align:left}
+  .optional{color:var(--muted);font-weight:500}
+  .reason-input{width:100%;font-family:inherit;font-size:16px;color:var(--ink);border:1.5px solid var(--line-strong);border-radius:11px;padding:11px 13px;resize:vertical;line-height:1.5;transition:border-color .15s,box-shadow .15s}
+  .reason-input:focus{outline:0;border-color:var(--primary);box-shadow:0 0 0 3px rgba(99,102,241,.18)}
+  .reason-input::placeholder{color:var(--muted-2)}
+  .rj-note{margin:12px 0 0;font-size:12.5px;color:var(--muted);display:flex;gap:8px;align-items:flex-start;text-align:left;background:#fafbff;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .rj-note svg{width:15px;height:15px;flex:none;margin-top:1px;color:var(--muted-2)}
+  .rj-actions{display:flex;gap:12px;margin-top:22px}
+  .rj-actions .btn{flex:1}
+  .toast-wrap{position:fixed;left:0;right:0;bottom:calc(20px + env(safe-area-inset-bottom));z-index:120;display:flex;flex-direction:column;align-items:center;gap:10px;pointer-events:none;padding:0 16px}
+  .toast{pointer-events:auto;display:flex;align-items:center;gap:11px;background:var(--ink);color:#fff;padding:12px 14px;border-radius:12px;box-shadow:var(--shadow-pop);font-size:13px;font-weight:500;transform:translateY(20px);opacity:0;transition:all .25s ease;max-width:100%}
+  .toast.show{transform:translateY(0);opacity:1}
+  .toast .t-icn{width:18px;height:18px;flex:none}
+  .toast .t-icn.ok{color:#5be3a0} .toast .t-icn.no{color:#ff9b9b}
+  .toast span{min-width:0}
+  .toast .undo{background:rgba(255,255,255,.16);border:0;color:#fff;font-family:inherit;font-weight:700;font-size:12.5px;padding:6px 12px;border-radius:8px;cursor:pointer;margin-left:2px;flex:none}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  .cur{display:inline-block;font-weight:700;font-size:11px;line-height:1.35;letter-spacing:.02em;padding:1px 5px;border-radius:5px;margin-right:4px}
+  .cur-AED{background:#e6e8fd;color:#4338ca}
+  .cur-USD{background:#fdecd2;color:#a85708}
+  .avatar{cursor:pointer}
+  .avatar:focus-visible{outline:3px solid rgba(99,102,241,.5);outline-offset:2px}
+  .avatar.pic svg{width:100% !important;height:100% !important}
+  .lightbox{position:fixed;inset:0;z-index:200;background:rgba(15,16,26,.85);backdrop-filter:blur(4px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;opacity:0;pointer-events:none;transition:opacity .22s ease;touch-action:none}
+  .lightbox.show{opacity:1;pointer-events:auto}
+  .lb-img{width:min(74vmin,320px);height:min(74vmin,320px);border-radius:50%;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.55);background:#fff;transition:transform .16s ease;will-change:transform}
+  .lb-img .avatar{width:100%;height:100%;cursor:default;background:linear-gradient(135deg,#e9edf9,#dbe0f2)}
+  .lb-img .avatar svg{width:58%;height:58%}
+  .lb-img .avatar.pic svg{width:100% !important;height:100% !important}
+</style>
+</head>
+<body>
+<div class="device">
+  <header class="topbar">
+    <!-- swap this text logo for your original <img class="logo" src="..."> -->
+    <div class="logo">maids.cc<small>+ nannies + visa services</small></div>
+    <div class="pending-pill"><span class="dot" aria-hidden="true"></span><span id="globalPending">0 awaiting action</span></div>
+  </header>
+
+  <div class="pagehead">
+    <div class="eyebrow">Office Staff Payroll</div>
+    <h1>Payroll Requests Pending Your Approval</h1>
+    <p>Approve or reject payroll requests, sign off overseas termination compensation, and acknowledge new hires.</p>
+  </div>
+
+  <div class="list" id="sections"></div>
+</div>
+
+<div class="scrim" id="scrim" role="presentation">
+  <div class="sheet term-modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="tmName">
+    <div class="sheet-grip" aria-hidden="true"></div>
+    <button class="modal-close" id="modalClose" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    <div class="sheet-pad">
+      <div class="tm-top">
+        <div class="tm-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 9V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6a2 2 0 0 1-2-2v-4"/><path d="M3 12h11M6 9l-3 3 3 3"/></svg></div>
+        <div><div class="tm-name" id="tmName">—</div><div class="tm-meta" id="tmMeta">—</div></div>
+      </div>
+      <p class="tm-lead">Review the final payout below. Edit the termination compensation amount if needed — the total updates automatically.</p>
+      <div class="tm-calc">
+        <div class="tm-row"><span>Prorated salary <em id="tmDays"></em></span><span class="num" id="tmProrated">—</span></div>
+        <div class="tm-row tm-edit">
+          <label for="compInput">Termination compensation <span class="req">*</span></label>
+          <div class="amount-input"><input class="num" type="number" id="compInput" min="0" step="1" inputmode="numeric" /><span class="cur-box" id="compCur">USD</span></div>
+        </div>
+        <div class="tm-row tm-total"><span>Total payout</span><span class="num" id="tmTotal">—</span></div>
+      </div>
+      <div class="tm-actions">
+        <button class="btn btn-ghost btn-lg" id="modalBack">Back</button>
+        <button class="btn btn-primary btn-lg" id="modalApprove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Approve</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="scrim" id="rejectScrim" role="presentation">
+  <div class="sheet reject-modal" id="rejectModal" role="dialog" aria-modal="true" aria-labelledby="rejectTitle">
+    <div class="sheet-grip" aria-hidden="true"></div>
+    <button class="modal-close" id="rejectClose" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    <div class="sheet-pad reject-pad">
+      <div class="rj-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><path d="M12 9v4M12 17h.01"/></svg></div>
+      <h3 class="rj-title" id="rejectTitle">Reject this request?</h3>
+      <p class="rj-desc" id="rejectDesc"></p>
+      <label class="field-label" for="rejectReason">Rejection reason <span class="optional">(optional)</span></label>
+      <textarea class="reason-input" id="rejectReason" rows="3" placeholder="Add a note for the payroll handler…"></textarea>
+      <p class="rj-note" id="rejectHint"></p>
+      <div class="rj-actions">
+        <button class="btn btn-ghost btn-lg" id="rejectCancel">Cancel</button>
+        <button class="btn btn-danger btn-lg" id="rejectConfirm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>Reject</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="lightbox" id="avatarLightbox" role="dialog" aria-modal="true" aria-label="Profile photo">
+  <div class="lb-img" id="lbImg"></div>
+</div>
+
+<div class="toast-wrap" id="toastWrap" aria-live="polite" aria-atomic="true"></div>
+
+<script>
+/* ICONS */
+const I = {
+  chev:'<path d="m6 9 6 6 6-6"/>',
+  check:'<path d="M20 6 9 17l-5-5"/>',
+  x:'<path d="M18 6 6 18M6 6l12 12"/>',
+  eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',
+  arrow:'<path d="M5 12h14M13 6l6 6-6 6"/>',
+  up:'<path d="M7 17 17 7M7 7h10v10"/>',
+  down:'<path d="M7 7 17 17M17 7v10H7"/>',
+  raise:'<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>',
+  bonus:'<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/>',
+  hire:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>',
+  term:'<path d="M10 9V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6a2 2 0 0 1-2-2v-4"/><path d="M3 12h11M6 9l-3 3 3 3"/>',
+  other:'<circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/>',
+  loan:'<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>',
+  bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+  info:'<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>'
+};
+function svg(p,sw){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="'+(sw||2)+'" stroke-linecap="round" stroke-linejoin="round">'+p+'</svg>'; }
+var AVATAR_SVG = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm0 1.8c-3.87 0-7 2.02-7 4.7V20h14v-1.5c0-2.68-3.13-4.7-7-4.7Z"/></svg>';
+function avatarPic(c){
+  var head='<circle cx="40" cy="37" r="16" fill="'+c.skin+'"/>';
+  var shoulders='<path d="M16 74c0-13 11-20 24-20s24 7 24 20z" fill="'+c.cloth+'"/>';
+  var hairTop='<path d="M24 39c-1-15 8-23 16-23s17 8 16 23c0 0-2-10-16-10s-16 10-16 10z" fill="'+c.hair+'"/>';
+  var sides=(c.g==='f')?'<rect x="22" y="34" width="6" height="22" rx="3" fill="'+c.hair+'"/><rect x="52" y="34" width="6" height="22" rx="3" fill="'+c.hair+'"/>':'';
+  return '<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><rect width="80" height="80" fill="'+c.bg+'"/>'+shoulders+sides+head+hairTop+'</svg>';
+}
+var AV_MEN=[
+  {g:'m',bg:'#dfe7fb',skin:'#f1c9a5',hair:'#2b2b2b',cloth:'#4f6fb0'},
+  {g:'m',bg:'#e6f4ea',skin:'#e0ac82',hair:'#5a3825',cloth:'#5b8f6f'},
+  {g:'m',bg:'#fdeede',skin:'#c68642',hair:'#151515',cloth:'#c98a3a'},
+  {g:'m',bg:'#eae6fb',skin:'#8d5524',hair:'#1a1a1a',cloth:'#6b5bb0'},
+  {g:'m',bg:'#e2f0f4',skin:'#ffdbac',hair:'#7a5230',cloth:'#3f8ca0'}
+];
+var AV_WOMEN=[
+  {g:'f',bg:'#fbe7ef',skin:'#f1c9a5',hair:'#3a2a1a',cloth:'#b0567f'},
+  {g:'f',bg:'#e9edf9',skin:'#e0ac82',hair:'#5a3825',cloth:'#4f6fb0'},
+  {g:'f',bg:'#f0ead9',skin:'#c68642',hair:'#151515',cloth:'#c98a3a'},
+  {g:'f',bg:'#e2f0f4',skin:'#ffdbac',hair:'#6b3f1d',cloth:'#3f8ca0'},
+  {g:'f',bg:'#e6f4ea',skin:'#8d5524',hair:'#1a1a1a',cloth:'#5b8f6f'}
+];
+var AV_MAP={
+  'Karim Fouad':['m',0],'John Mwangi':['m',1],'Daniel Okoro':['m',2],'Abdullah Al-Marri':['m',3],'Peter Owusu':['m',4],
+  'Kofi Boateng':['m',0],'Ramy Adel':['m',1],'Ali Hassan':['m',2],'Ahmed Khan':['m',3],'Lucas Almeida':['m',4],
+  'Omar Adel':['m',0],'James Cole':['m',1],'Ibrahim Toure':['m',2],'Sulaiman Eid':['m',3],'David Kimani':['m',4],'Omar Sherif':['m',0],
+  'Rodayna Shehab':['f',0],'Maria Santos':['f',1],'Mei Lin':['f',2],'Grace Adeyemi':['f',3],'Sofia Reyes':['f',4],
+  'Lina Haddad':['f',0],'Fatima Al-Mansoori':['f',1],'Fatou Diallo':['f',2],'Amina Yusuf':['f',3],'Yasmine Emara':['f',4],
+  'Maryam Al-Suwaidi':['f',0],'Hana Kovac':['f',1]
+};
+function avatarFor(name){
+  var m=AV_MAP[name];
+  if(!m) return '<span class="avatar" role="button" tabindex="0" aria-label="View photo of '+name+'">'+AVATAR_SVG+'</span>';
+  var cfg=(m[0]==='m'?AV_MEN:AV_WOMEN)[m[1]];
+  return '<span class="avatar pic" role="button" tabindex="0" aria-label="View photo of '+name+'">'+avatarPic(cfg)+'</span>';
+}
+function curBadge(c){ return '<span class="cur cur-'+c+'">'+c+'</span>'; }
+function fmtDate(s){ var M={Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'}; var p=String(s||'').trim().split(/\s+/); if(p.length!==3||!M[p[1]]) return s; return p[2]+'-'+M[p[1]]+'-'+(p[0].length<2?'0'+p[0]:p[0]); }
+
+const RATE = 3.67;
+const aedEq = (v,c)=> c==='USD' ? v*RATE : v;
+const fmt = n => Number(n).toLocaleString('en-US');
+/* NEW in v3: Total payout = prorated salary + termination compensation (same figure as "Total payout" in the Take Action modal) */
+const totalPayout = r => r.prorated + r.amt.v;
+
+let data = {
+  salaryRaises: [
+    {id:'sr1', name:'Rodayna Shehab', start:'01 Jan 2024', salary:{c:'AED',v:22000}, mgr:'Omar Yossef', title:'Business Analyst', amt:{c:'AED',v:3500}, upd:'Loan on 2024-12-21', notes:'Great performer'},
+    {id:'sr2', name:'Karim Fouad', start:'12 Mar 2022', salary:{c:'AED',v:18500}, mgr:'Sarah Khan', title:'Team Lead', amt:{c:'AED',v:2750}, upd:'', notes:'Consistent top performer'},
+    {id:'sr3', name:'Hessa Al-Naqbi', start:'05 Jun 2021', salary:{c:'AED',v:30000}, mgr:'Mohamed Khaled', title:'Project Manager', amt:{c:'AED',v:5000}, upd:'Bonus on 2025-03-10', notes:'Promotion to senior'},
+    {id:'sr4', name:'Maria Santos', start:'18 Aug 2023', salary:{c:'USD',v:4200}, mgr:'Yasmine El Sheikh', title:'Onsite Agent', amt:{c:'USD',v:800}, upd:'', notes:'Exceeded targets'},
+    {id:'sr5', name:'John Mwangi', start:'02 Feb 2022', salary:{c:'USD',v:6500}, mgr:'Ezz Ahmed', title:'MV Resolver', amt:{c:'USD',v:1200}, upd:'Salary Raise on 2024-09-01', notes:'Leadership role'},
+    {id:'sr6', name:'Priya Nair', start:'27 Nov 2023', salary:{c:'USD',v:3800}, mgr:'Hend Raouf', title:'Visa Agent', amt:{c:'USD',v:600}, upd:'', notes:'Strong quarter'},
+    {id:'sr7', name:'Daniel Okoro', start:'09 Apr 2024', salary:{c:'USD',v:5400}, mgr:'Elia Martel', title:'Delighter', amt:{c:'USD',v:950}, upd:'Bonus on 2025-01-15', notes:'Retention adjustment'}
+  ],
+  bonusDeduct: [
+    {id:'bd1', type:'Bonus', name:'Abdullah Al-Marri', start:'03 Feb 2020', salary:{c:'AED',v:45000}, mgr:'Mohamed Khaled', title:'Project Manager', amt:{c:'AED',v:20000}, upd:'Salary Raise on 2024-05-01', notes:'Outstanding year'},
+    {id:'bd7', type:'Bonus', name:'Chen Wei', start:'19 Jul 2021', salary:{c:'USD',v:11000}, mgr:'Elia Martel', title:'Delighter', amt:{c:'USD',v:5000}, upd:'Salary Raise on 2025-02-01', notes:'Excellent leadership'},
+    {id:'bd10', type:'Bonus', name:'Mei Lin', start:'16 Dec 2022', salary:{c:'USD',v:10000}, mgr:'Gamal Roshdy', title:'Onsite Agent', amt:{c:'USD',v:4500}, upd:'', notes:'Regional star'},
+    {id:'bd3', type:'Bonus', name:'Saeed Al-Hameli', start:'22 Jan 2022', salary:{c:'AED',v:33000}, mgr:'Amina Ahmed', title:'Delighter', amt:{c:'AED',v:15000}, upd:'Bonus on 2024-12-01', notes:'Client retention'},
+    {id:'bd6', type:'Bonus', name:'Grace Adeyemi', start:'08 Mar 2023', salary:{c:'USD',v:8000}, mgr:'Yasmine El Sheikh', title:'Onsite Agent', amt:{c:'USD',v:3500}, upd:'', notes:'Top of team'},
+    {id:'bd14', type:'Deduction', name:'Sofia Reyes', start:'17 Jul 2023', salary:{c:'USD',v:7000}, mgr:'Hend Raouf', title:'Visa Agent', amt:{c:'USD',v:3000}, upd:'Bonus on 2024-11-05', notes:'Unpaid leave'},
+    {id:'bd2', type:'Bonus', name:'Fatima Al-Zaabi', start:'11 Sep 2021', salary:{c:'AED',v:24000}, mgr:'Sarah Khan', title:'Team Lead', amt:{c:'AED',v:10000}, upd:'', notes:'Q4 target smashed'},
+    {id:'bd13', type:'Deduction', name:'Peter Owusu', start:'09 Jan 2022', salary:{c:'USD',v:6000}, mgr:'Yasmine El Sheikh', title:'Onsite Agent', amt:{c:'USD',v:2400}, upd:'', notes:'Equipment damage'},
+    {id:'bd11', type:'Deduction', name:'Tarek Sami', start:'05 May 2021', salary:{c:'AED',v:20000}, mgr:'Sarah Khan', title:'Software Engineer', amt:{c:'AED',v:8000}, upd:'', notes:'Paid flight ticket'},
+    {id:'bd9', type:'Bonus', name:'Kofi Boateng', start:'02 Apr 2022', salary:{c:'USD',v:5000}, mgr:'Karim Anas', title:'MV Resolver', amt:{c:'USD',v:2000}, upd:'Bonus on 2024-06-15', notes:'High CSAT'},
+    {id:'bd8', type:'Bonus', name:'Rosa Delgado', start:'25 Nov 2023', salary:{c:'USD',v:4500}, mgr:'Hend Raouf', title:'Visa Agent', amt:{c:'USD',v:1800}, upd:'', notes:'Consistent quality'},
+    {id:'bd4', type:'Bonus', name:'Ramy Adel', start:'14 Jun 2023', salary:{c:'AED',v:15000}, mgr:'Omar Yossef', title:'Business Analyst', amt:{c:'AED',v:6000}, upd:'', notes:'Great initiative'},
+    {id:'bd15', type:'Deduction', name:'Kwame Mensah', start:'21 Feb 2024', salary:{c:'USD',v:3500}, mgr:'Karim Anas', title:'MV Resolver', amt:{c:'USD',v:1500}, upd:'', notes:'Late penalty'},
+    {id:'bd5', type:'Bonus', name:'Lina Haddad', start:'30 Oct 2022', salary:{c:'AED',v:11000}, mgr:'Ezz Ahmed', title:'MV Resolver', amt:{c:'AED',v:5000}, upd:'Loan on 2024-08-10', notes:'Mentored new hires'},
+    {id:'bd12', type:'Deduction', name:'Nour Fares', start:'28 Aug 2023', salary:{c:'AED',v:8000}, mgr:'Omar Yossef', title:'Business Analyst', amt:{c:'AED',v:3000}, upd:'Loan on 2025-01-20', notes:'Advance recovery'}
+  ],
+  terminations: [
+    {id:'tm1', name:'Ali Hassan', start:'14 Apr 2024', salaryC:'AED', salaryV:16000, prorated:9000, days:17, mgr:'Yasmine El Sheikh', title:'Onsite Agent', amt:{c:'AED',v:23000}, upd:'Loan on 2025-02-14', notes:'Department no longer exists', termDate:'20/06/2026'},
+    {id:'tm2', name:'Mohammed Al-Kuwaiti', start:'19 Jul 2025', salaryC:'USD', salaryV:3600, prorated:2200, days:19, mgr:'Elia Martel', title:'Delighter', amt:{c:'USD',v:3600}, upd:'', notes:'Fired because of bad attitude', termDate:'15/07/2026'},
+    {id:'tm3', name:'Ahmed Khan', start:'28 Sep 2025', salaryC:'AED', salaryV:9000, prorated:7000, days:24, mgr:'Ezz Ahmed', title:'Business Analyst', amt:{c:'AED',v:4500}, upd:'', notes:"Wasn't a good fit", termDate:'24/12/2025'},
+    {id:'tm4', name:'Fatima Al-Mansoori', start:'15 Jul 2020', salaryC:'USD', salaryV:12000, prorated:5000, days:13, mgr:'Jamal Lateef', title:'MV Resolver', amt:{c:'USD',v:0}, upd:'Salary Raise on 2023-10-09', notes:'Resigned to join another company', termDate:'10/07/2026'},
+    {id:'tm5', name:'Noura Salem', start:'01 May 2022', salaryC:'AED', salaryV:17000, prorated:5000, days:9, mgr:'Hend Raouf', title:'Visa Agent', amt:{c:'AED',v:0}, upd:'Bonus on 2024-07-15', notes:"Resigned to pursue her master's degree", termDate:'08/07/2026'}
+  ],
+  other: [
+    {id:'ot6', type:'Switch to Expat', name:'Fatou Diallo', start:'30 Sep 2021', salary:{c:'USD',v:5500}, mgr:'Karim Anas', title:'MV Resolver', amt:{c:'AED',v:18000}, upd:'', notes:'Promoted to on-site role'},
+    {id:'ot5', type:'Switch to Expat', name:'Lucas Almeida', start:'15 Jan 2022', salary:{c:'USD',v:5000}, mgr:'Gamal Roshdy', title:'Onsite Agent', amt:{c:'AED',v:14000}, upd:'Salary Raise on 2024-12-15', notes:'Relocating to UAE office'},
+    {id:'ot4', type:'New Loan', name:'Ravi Kumar', start:'26 Jun 2021', salary:{c:'USD',v:4500}, mgr:'Hend Raouf', title:'Visa Agent', amt:{c:'USD',v:3000}, upd:'', notes:'Home relocation'},
+    {id:'ot1', type:'New Loan', name:'Omar Adel', start:'07 Jul 2019', salary:{c:'AED',v:15000}, mgr:'Mohamed Khaled', title:'Project Manager', amt:{c:'AED',v:9000}, upd:'Salary Raise on 2025-04-01', notes:'Personal loan'},
+    {id:'ot10', type:'Loan Repayment Change', name:'Diego Santos', start:'23 Feb 2023', salary:{c:'USD',v:3800}, mgr:'Yasmine El Sheikh', title:'Onsite Agent', amt:{c:'USD',v:2000}, upd:'Bonus on 2024-09-20', notes:'Adjusted repayment schedule'},
+    {id:'ot8', type:'Loan Repayment Change', name:'Yousef Nabil', start:'19 Apr 2020', salary:{c:'AED',v:12000}, mgr:'Sarah Khan', title:'Team Lead', amt:{c:'AED',v:5000}, upd:'Loan on 2024-02-10', notes:'Increased monthly repayment'},
+    {id:'ot7', type:'Salary Reduction', name:'Ibrahim Toure', start:'12 Aug 2023', salary:{c:'USD',v:3000}, mgr:'Elia Martel', title:'Delighter', amt:{c:'USD',v:1200}, upd:'', notes:'Role change, reduced scope'},
+    {id:'ot9', type:'Loan Repayment Change', name:'Grace Wanjiru', start:'05 Nov 2022', salary:{c:'USD',v:2200}, mgr:'Omar Yossef', title:'Business Analyst', amt:{c:'USD',v:800}, upd:'', notes:'Reduced monthly repayment'}
+  ],
+  newHires: [
+    {id:'nh1', name:'Sulaiman Eid', htype:'Overseas', emp:'Intern', start:'28 Dec 2025', salary:{c:'USD',v:1100}, title:'Business Analyst', dept:'Payroll, Money Control', mgr:'Laila Hesham', notes:'Interning for 6 months'},
+    {id:'nh2', name:'Sabry Abdelwahab', htype:'Overseas', emp:'Part-time', start:'29 Dec 2025', salary:{c:'USD',v:1300}, title:'MV Resolver', dept:'MV Resolvers', mgr:'Yassin Ahmed', notes:'Rehired as a part-timer'},
+    {id:'nh3', name:'Yasmine Emara', htype:'Overseas', emp:'Full-time', start:'30 Dec 2025', salary:{c:'USD',v:2800}, title:'Visa Agent', dept:'Housemaids Visa', mgr:'Karim Anas', notes:''},
+    {id:'nh4', name:'David Kimani', htype:'Overseas', emp:'Full-time', start:'02 Jan 2026', salary:{c:'USD',v:3200}, title:'Onsite Agent', dept:'Retail', mgr:'Gamal Roshdy', notes:'New market expansion'},
+    {id:'nh5', name:'Ana Ferreira', htype:'Overseas', emp:'Full-time', start:'03 Jan 2026', salary:{c:'USD',v:2400}, title:'MV Resolver', dept:'MV Resolvers', mgr:'Yassin Ahmed', notes:'Replacing a leaver'},
+    {id:'nh6', name:'Wei Zhang', htype:'Overseas', emp:'Part-time', start:'04 Jan 2026', salary:{c:'USD',v:1600}, title:'Visa Agent', dept:'Housemaids Visa', mgr:'Karim Anas', notes:'Weekend coverage'},
+    {id:'nh7', name:'Omar Sherif', htype:'Emirati', emp:'Full-time', start:'05 Jan 2026', salary:{c:'AED',v:11000}, title:'Delighter', dept:'Delighters', mgr:'Amina Ahmed', notes:'For the Emiratis delighters team'},
+    {id:'nh8', name:'Maryam Al-Suwaidi', htype:'Emirati', emp:'Full-time', start:'06 Jan 2026', salary:{c:'AED',v:13500}, title:'Team Lead', dept:'Delighters', mgr:'Amina Ahmed', notes:'Emiratization program'},
+    {id:'nh9', name:'Faraj Nasser', htype:'Expat', emp:'Full-time', start:'09 Jan 2026', salary:{c:'AED',v:9800}, title:'Onsite Agent', dept:'Retail', mgr:'Gamal Roshdy', notes:'Hired instead of Johnny Pietro'},
+    {id:'nh10', name:'Hana Kovac', htype:'Expat', emp:'Full-time', start:'10 Jan 2026', salary:{c:'AED',v:15000}, title:'Project Manager', dept:'Payroll, Money Control', mgr:'Laila Hesham', notes:'Senior hire'},
+    {id:'ot2', type:'New Loan', name:'James Cole', start:'13 Oct 2022', salary:{c:'USD',v:3400}, mgr:'Ezz Ahmed', title:'MV Resolver', amt:{c:'USD',v:1800}, upd:'', notes:'To buy a laptop'},
+    {id:'ot3', type:'New Loan', name:'Amina Yusuf', start:'04 Mar 2023', salary:{c:'AED',v:9500}, mgr:'Yasmine El Sheikh', title:'Onsite Agent', amt:{c:'AED',v:3500}, upd:'Bonus on 2024-10-01', notes:'Family emergency'}
+  ]
+};
+
+const selected = { salaryRaises:new Set(), bonusDeduct:new Set(), other:new Set(), terminations:new Set(), newHires:new Set() };
+const openState = {};
+const SECTIONS = [
+  {key:'salaryRaises', title:'Salary Raises',            icn:I.raise, cls:'icn-raise', kind:'approval'},
+  {key:'bonusDeduct',  title:'Bonuses & Deductions',     icn:I.bonus, cls:'icn-bonus', kind:'approval'},
+  {key:'terminations', title:'Termination Compensation', icn:I.term,  cls:'icn-term',  kind:'termination'},
+  {key:'other',        title:'Other Requests',           icn:I.other, cls:'icn-other', kind:'approval'},
+  {key:'newHires',     title:'For Your Awareness',       icn:I.info,  cls:'icn-hire',  kind:'hires'}
+];
+function sortByAmt(arr){ return arr.sort((a,b)=> aedEq(b.amt.v,b.amt.c) - aedEq(a.amt.v,a.amt.c)); }
+function sortBySalary(arr){ return arr.sort((a,b)=> aedEq(b.salary.v,b.salary.c) - aedEq(a.salary.v,a.salary.c)); }
+sortByAmt(data.salaryRaises); sortByAmt(data.terminations);
+
+/* ---- shared actions (identical to v2, except: every termination row is now selectable, not only zero-amount ones) ---- */
+let lastRemoval = null;
+function removeRecords(key, ids){
+  const items = []; const kept = [];
+  data[key].forEach((r,idx)=>{ if(ids.includes(r.id)){ items.push({record:r, index:idx}); selected[key].delete(r.id); } else kept.push(r); });
+  data[key] = kept; lastRemoval = {key, items}; render(); return items.length;
+}
+function undoLast(){
+  if(!lastRemoval) return;
+  const {key, items} = lastRemoval;
+  items.slice().sort((a,b)=>a.index-b.index).forEach(it=>{ data[key].splice(Math.min(it.index, data[key].length), 0, it.record); });
+  lastRemoval = null; render();
+  showToast('Restored '+items.length+' record'+(items.length>1?'s':''), 'ok', false);
+}
+function doAction(action, key, id){
+  const rec = data[key].find(r=>r.id===id); const name = rec?rec.name:'record';
+  if(action==='approve'){ removeRecords(key,[id]); showToast('Approved — '+name, 'ok'); }
+  else if(action==='reject'){ openRejectModal(key, id); }
+  else if(action==='seen'){ removeRecords(key,[id]); showToast('Marked as seen — '+name, 'ok'); }
+}
+function bulkAction(key){
+  const ids = Array.from(selected[key]); if(ids.length===0) return;
+  const n = removeRecords(key, ids);
+  if(key==='newHires') showToast('Marked '+n+' hire'+(n>1?'s':'')+' as seen', 'ok');
+  else showToast('Approved '+n+' request'+(n>1?'s':''), 'ok');
+}
+function selectableIds(key){ return data[key].map(r=>r.id); }   /* v2: terminations were limited to amount = 0 */
+function toggleSelectAll(key){
+  const ids = selectableIds(key);
+  const allSel = ids.length>0 && ids.every(id=>selected[key].has(id));
+  if(allSel) selected[key].clear(); else { selected[key].clear(); ids.forEach(id=>selected[key].add(id)); }
+  render();
+}
+
+/* ---- termination modal (unchanged from v2) ---- */
+const scrim = document.getElementById('scrim');
+const compInput = document.getElementById('compInput');
+let modalRec = null; let lastFocus = null;
+function openModal(id){
+  const r = data.terminations.find(x=>x.id===id); if(!r) return;
+  modalRec = r; lastFocus = document.activeElement;
+  const cur = r.amt.c;
+  document.getElementById('tmName').textContent = r.name;
+  document.getElementById('tmMeta').textContent = r.title + ' · With the company since ' + fmtDate(r.start) + ' · Current salary is ' + r.salaryC + ' ' + fmt(r.salaryV);
+  document.getElementById('tmDays').textContent = '('+r.days+' days)';
+  document.getElementById('tmProrated').innerHTML = curBadge(cur)+fmt(r.prorated);
+  document.getElementById('compCur').textContent = cur;
+  compInput.value = r.amt.v;
+  updateNewTotal();
+  scrim.classList.add('show'); document.body.style.overflow='hidden';
+  setTimeout(()=>compInput.focus(), 60);
+}
+function updateNewTotal(){
+  if(!modalRec) return;
+  const cur = modalRec.amt.c; const val = Math.max(0, parseFloat(compInput.value||'0'));
+  document.getElementById('tmTotal').innerHTML = curBadge(cur)+fmt(modalRec.prorated + val);
+}
+function closeModal(){ scrim.classList.remove('show'); document.body.style.overflow=''; modalRec=null; if(lastFocus&&lastFocus.focus) lastFocus.focus(); }
+compInput.addEventListener('input', updateNewTotal);
+document.getElementById('modalClose').addEventListener('click', closeModal);
+document.getElementById('modalBack').addEventListener('click', closeModal);
+scrim.addEventListener('click', e=>{ if(e.target===scrim) closeModal(); });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape' && scrim.classList.contains('show')) closeModal(); });
+document.getElementById('modalApprove').addEventListener('click', ()=>{
+  if(!modalRec) return;
+  const cur = modalRec.amt.c; const val = Math.max(0, parseFloat(compInput.value||'0'));
+  const name = modalRec.name; const total = modalRec.prorated + val; const id = modalRec.id;
+  closeModal(); removeRecords('terminations', [id]);
+  showToast('Termination approved — '+name+' · total '+cur+' '+fmt(total), 'ok');
+});
+
+/* ---- reject modal (unchanged) ---- */
+const rejectScrim = document.getElementById('rejectScrim');
+const rejectReason = document.getElementById('rejectReason');
+let rejectCtx = null, rejectLastFocus = null;
+function openRejectModal(key, id){
+  const rec = data[key].find(r=>r.id===id); if(!rec) return;
+  const type = rec.type || (key==='salaryRaises' ? 'Salary Raise' : 'payroll');
+  rejectCtx = {key, id, name:rec.name};
+  rejectLastFocus = document.activeElement;
+  document.getElementById('rejectDesc').innerHTML = 'You are about to reject the <b>'+type+'</b> request of <b>'+rec.name+'</b>.';
+  document.getElementById('rejectHint').innerHTML = svg(I.bell)+'The payroll handler will be notified of this rejection and any reason you add.';
+  rejectReason.value = '';
+  rejectScrim.classList.add('show'); document.body.style.overflow='hidden';
+  setTimeout(()=>rejectReason.focus(), 60);
+}
+function closeRejectModal(){ rejectScrim.classList.remove('show'); document.body.style.overflow=''; if(rejectLastFocus&&rejectLastFocus.focus) rejectLastFocus.focus(); rejectCtx=null; }
+document.getElementById('rejectCancel').addEventListener('click', closeRejectModal);
+document.getElementById('rejectClose').addEventListener('click', closeRejectModal);
+rejectScrim.addEventListener('click', e=>{ if(e.target===rejectScrim) closeRejectModal(); });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape' && rejectScrim.classList.contains('show')) closeRejectModal(); });
+document.getElementById('rejectConfirm').addEventListener('click', ()=>{
+  if(!rejectCtx) return;
+  const {key, id, name} = rejectCtx; const reason = rejectReason.value.trim();
+  closeRejectModal(); removeRecords(key, [id]);
+  showToast('Rejected — '+name+' · payroll handler notified'+(reason?' (reason added)':''), 'no');
+});
+
+/* ---- toast ---- */
+let toastTimer=null;
+function showToast(msg, kind, withUndo){
+  if(withUndo===undefined) withUndo=true;
+  const wrap = document.getElementById('toastWrap'); wrap.innerHTML='';
+  const t = document.createElement('div'); t.className='toast';
+  const icn = kind==='no'
+    ? '<svg class="t-icn no" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">'+I.x+'</svg>'
+    : '<svg class="t-icn ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">'+I.check+'</svg>';
+  t.innerHTML = icn + '<span>'+msg+'</span>' + (withUndo?'<button class="undo" id="undoBtn">Undo</button>':'');
+  wrap.appendChild(t);
+  requestAnimationFrame(()=>t.classList.add('show'));
+  if(withUndo){ const u=document.getElementById('undoBtn'); if(u) u.addEventListener('click', undoLast); }
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=>{ if(t.parentNode) t.parentNode.removeChild(t); },250); }, withUndo?5000:2600);
+}
+
+/* ---- avatar lightbox ---- */
+(function(){
+  var lb=document.getElementById('avatarLightbox'), lbImg=document.getElementById('lbImg');
+  var scale=1, pinchStart=0, startScale=1;
+  function setScale(s){ scale=Math.min(4,Math.max(1,s)); lbImg.style.transform='scale('+scale.toFixed(3)+')'; }
+  function open(avEl){ lbImg.innerHTML=''; var c=avEl.cloneNode(true); c.removeAttribute('role'); c.removeAttribute('tabindex'); lbImg.appendChild(c); scale=1; lbImg.style.transform='scale(1)'; lb.classList.add('show'); document.body.style.overflow='hidden'; }
+  function close(){ lb.classList.remove('show'); document.body.style.overflow=''; scale=1; lbImg.style.transform='scale(1)'; }
+  window.__openAvatar=open;
+  lb.addEventListener('click',function(e){ if(!e.target.closest('#lbImg')) close(); });
+  lb.addEventListener('wheel',function(e){ e.preventDefault(); setScale(scale+(e.deltaY<0?0.2:-0.2)); },{passive:false});
+  function dist(t){ var dx=t[0].clientX-t[1].clientX, dy=t[0].clientY-t[1].clientY; return Math.hypot(dx,dy); }
+  lb.addEventListener('touchstart',function(e){ if(e.touches.length===2){ pinchStart=dist(e.touches); startScale=scale; } },{passive:false});
+  lb.addEventListener('touchmove',function(e){ if(e.touches.length===2){ e.preventDefault(); setScale(startScale*dist(e.touches)/pinchStart); } },{passive:false});
+  lbImg.addEventListener('dblclick',function(e){ e.stopPropagation(); setScale(scale>1?1:2); });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape' && lb.classList.contains('show')) close(); });
+  document.addEventListener('keydown',function(e){ if((e.key==='Enter'||e.key===' ')){ var a=document.activeElement; if(a && a.classList && a.classList.contains('avatar')){ e.preventDefault(); open(a); } } });
+})();
+
+/* ======== MOBILE-SPECIFIC (v2 code, patched where marked v3) ======== */
+data.newHires.sort((a,b)=>(b.htype?aedEq(b.salary.v,b.salary.c):aedEq(b.amt.v,b.amt.c))-(a.htype?aedEq(a.salary.v,a.salary.c):aedEq(a.amt.v,a.amt.c)));
+function typeTag(type){
+  if(type==='Bonus') return '<span class="type-tag tag-bonus">'+svg(I.up)+'Bonus</span>';
+  if(type==='Deduction') return '<span class="type-tag tag-deduct">'+svg(I.down)+'Deduction</span>';
+  if(type==='New Loan') return '<span class="type-tag tag-loan">'+svg(I.loan)+'New Loan</span>';
+  if(type==='Switch to Expat') return '<span class="type-tag tag-switch">'+svg(I.arrow)+'Switch to Expat</span>';
+  if(type==='Salary Reduction') return '<span class="type-tag tag-deduct">'+svg(I.down)+'Salary Reduction</span>';
+  if(type==='Loan Repayment Change') return '<span class="type-tag tag-neutral">'+svg(I.loan)+'Repayment Change</span>';
+  return '<span class="type-tag tag-neutral">'+type+'</span>';
+}
+function amtBlock(amt, mode, cap){
+  const cls = mode==='up'?' up':(mode==='down'?' down':'');
+  const arrow = mode==='up'?svg(I.up):(mode==='down'?svg(I.down):'');
+  return '<div class="rc-amtwrap"><div class="rc-amt'+cls+'">'+arrow+curBadge(amt.c)+fmt(amt.v)+'</div>'+(cap?'<div class="rc-cap">'+cap+'</div>':'')+'</div>';
+}
+function metaGrid(items){
+  return '<div class="rc-meta">'+items.map(it=>'<div class="mi'+(it.wide?' wide':'')+'"><div class="mi-l">'+it.l+'</div><div class="mi-v'+(it.ital?' ital':'')+(it.cls?' '+it.cls:'')+'">'+it.v+'</div></div>').join('')+'</div>';
+}
+function noteHtml(n){ return n ? '<div class="rc-note">'+n+'</div>' : ''; }
+function cbx(key,id,checked){
+  return '<label class="cbx"><input type="checkbox" data-key="'+key+'" data-id="'+id+'" '+(checked?'checked':'')+' aria-label="Select"><span class="box">'+svg(I.check,3)+'</span></label>';
+}
+function apprej(key,id){
+  return '<div class="rc-actions">'
+    +'<button class="btn act-approve" data-action="approve" data-key="'+key+'" data-id="'+id+'">'+svg(I.check,2.3)+'Approve</button>'
+    +'<button class="btn act-reject" data-action="reject" data-key="'+key+'" data-id="'+id+'">'+svg(I.x,2.3)+'Reject</button>'
+    +'</div>';
+}
+function cardWrap(sel,id,check,name,sub,amount,tags,meta,note,actions){
+  return '<div class="rcard'+(sel?' selected':'')+'" data-row="'+id+'">'
+    +'<div class="rc-top">'+(check?'<div class="rc-check">'+check+'</div>':'')
+      +avatarFor(name)
+      +'<div class="rc-headtext"><div class="rc-name">'+name+'</div><div class="rc-sub">'+sub+'</div></div>'
+      +amount
+    +'</div>'
+    +(tags?'<div class="rc-tags">'+tags+'</div>':'')
+    +meta+note+actions
+  +'</div>';
+}
+function renderCards(sec){
+  const arr = data[sec.key];
+  if(arr.length===0){
+    const m = sec.kind==='hires' ? ['No new hires to review','You are all caught up.'] : ['No pending requests','Everything here has been actioned.'];
+    return '<div class="empty">'+svg(I.check)+'<b>'+m[0]+'</b><span>'+m[1]+'</span></div>';
+  }
+  return arr.map(r=>{
+    const sel = selected[sec.key].has(r.id);
+    if(sec.key==='salaryRaises'){
+      return cardWrap(sel,r.id,cbx(sec.key,r.id,sel),r.name,r.title,
+        amtBlock(r.amt,'plain','raise'),'',
+        metaGrid([{l:'Current salary',v:curBadge(r.salary.c)+fmt(r.salary.v)+' · joined '+fmtDate(r.start),wide:true},{l:'Manager',v:r.mgr},{l:'Last update',v:r.upd||'—'}]),
+        noteHtml(r.notes), apprej(sec.key,r.id));
+    }
+    if(sec.key==='bonusDeduct'){
+      const mode = r.type==='Bonus'?'up':'down';
+      return cardWrap(sel,r.id,cbx(sec.key,r.id,sel),r.name,r.title,
+        amtBlock(r.amt,mode,''),typeTag(r.type),
+        metaGrid([{l:'Current salary',v:curBadge(r.salary.c)+fmt(r.salary.v)+' · joined '+fmtDate(r.start),wide:true},{l:'Manager',v:r.mgr},{l:'Last update',v:r.upd||'—'}]),
+        noteHtml(r.notes), apprej(sec.key,r.id));
+    }
+    if(sec.key==='other'){
+      const mode = r.type==='Salary Reduction'?'down':'plain';
+      return cardWrap(sel,r.id,cbx(sec.key,r.id,sel),r.name,r.title,
+        amtBlock(r.amt,mode,''),typeTag(r.type),
+        metaGrid([{l:'Current salary',v:curBadge(r.salary.c)+fmt(r.salary.v)+' · joined '+fmtDate(r.start),wide:true},{l:'Manager',v:r.mgr},{l:'Last update',v:r.upd||'—'}]),
+        noteHtml(r.notes), apprej(sec.key,r.id));
+    }
+    if(sec.key==='terminations'){
+      const actions = '<div class="rc-actions"><button class="btn act-take" data-action="take" data-id="'+r.id+'">'+svg(I.arrow)+'Take Action</button></div>';
+      /* v3: every card has a checkbox (v2: only zero-amount cards) + new "Total payout" field */
+      return cardWrap(sel,r.id,cbx(sec.key,r.id,sel),r.name,r.title,
+        amtBlock(r.amt,'plain','compensation'),'',
+        metaGrid([
+          {l:'Current salary',v:curBadge(r.salaryC)+fmt(r.salaryV)},
+          {l:'With company since',v:fmtDate(r.start)},
+          {l:'Prorated salary',v:curBadge(r.salaryC)+fmt(r.prorated)+' · '+r.days+' days',wide:true,ital:true},
+          {l:'Total payout',v:curBadge(r.amt.c)+fmt(totalPayout(r)),wide:true,cls:'total'},
+          {l:'Manager',v:r.mgr},
+          {l:'Last update',v:r.upd||'—'}
+        ]),
+        noteHtml(r.notes), actions);
+    }
+    if(sec.key==='newHires'){
+      const actions = '<div class="rc-actions"><button class="btn act-seen" data-action="seen" data-key="newHires" data-id="'+r.id+'">'+svg(I.eye)+'Seen</button></div>';
+      if(!r.htype){
+        return cardWrap(sel,r.id,cbx(sec.key,r.id,sel),r.name,r.title,
+          amtBlock(r.amt,'plain',''),typeTag(r.type),
+          metaGrid([{l:'Current salary',v:curBadge(r.salary.c)+fmt(r.salary.v)+' · joined '+fmtDate(r.start),wide:true},{l:'Manager',v:r.mgr},{l:'Last update',v:r.upd||'\u2014'}]),
+          noteHtml(r.notes), actions);
+      }
+      const tags = '<span class="type-tag hire-tag">New Hire</span><span class="chip">'+r.htype+'</span><span class="chip">'+r.emp+'</span>';
+      return cardWrap(sel,r.id,cbx(sec.key,r.id,sel),r.name,r.title,
+        amtBlock(r.salary,'plain','salary'),tags,
+        metaGrid([{l:'Department',v:r.dept,wide:true},{l:'Manager',v:r.mgr},{l:'Starts',v:fmtDate(r.start)}]),
+        noteHtml(r.notes), actions);
+    }
+  }).join('');
+}
+function tbBtns(key, selLabel, selEnabled, bulkLabel, bulkEnabled){
+  return '<button class="btn btn-ghost" data-tb="selectAll" data-key="'+key+'"'+(selEnabled?'':' disabled')+'>'+selLabel+'</button>'
+    +'<button class="btn btn-primary" data-tb="bulk" data-key="'+key+'"'+(bulkEnabled?'':' disabled')+'>'+bulkLabel+'</button>';
+}
+function toolbar(sec){
+  const arr = data[sec.key];
+  if(sec.kind==='hires'){
+    const ids = arr.map(r=>r.id); const allSel = ids.length>0 && ids.every(id=>selected.newHires.has(id)); const n = selected.newHires.size;
+    return tbBtns('newHires', allSel?'De-select all':'Select all ('+ids.length+')', ids.length>0, svg(I.eye)+'Mark seen ('+n+')', n>0);
+  }
+  if(sec.kind==='termination'){
+    /* v3: "Select zero (2)" becomes "Select all (5)" and covers every case */
+    const ids = arr.map(r=>r.id); const allSel = ids.length>0 && ids.every(id=>selected.terminations.has(id)); const n = selected.terminations.size;
+    return tbBtns('terminations', allSel?'De-select all':'Select all ('+ids.length+')', ids.length>0, svg(I.check)+'Approve ('+n+')', n>0);
+  }
+  const ids = arr.map(r=>r.id); const allSel = ids.length>0 && ids.every(id=>selected[sec.key].has(id)); const n = selected[sec.key].size;
+  return tbBtns(sec.key, allSel?'De-select all':'Select all ('+ids.length+')', ids.length>0, svg(I.check)+'Approve ('+n+')', n>0);
+}
+function render(){
+  const root = document.getElementById('sections');
+  root.innerHTML = SECTIONS.map(sec=>{
+    const count = data[sec.key].length; const isOpen = !!openState[sec.key];
+    return '<section class="section'+(isOpen?' open':'')+'" data-sec="'+sec.key+'">'
+      + '<button class="sec-head" aria-expanded="'+isOpen+'" aria-controls="body-'+sec.key+'" data-toggle="'+sec.key+'">'
+        + '<span class="sec-icon '+sec.cls+'">'+svg(sec.icn)+'</span>'
+        + '<span class="sec-title">'+sec.title+'</span>'
+        + '<span class="count-badge '+(count?'':'zero')+'">'+count+'</span>'
+        + '<span class="chev">'+svg(I.chev)+'</span>'
+      + '</button>'
+      + '<div class="sec-body" id="body-'+sec.key+'"><div class="inner">'
+        + (count ? '<div class="toolbar">'+toolbar(sec)+'</div>' : '')
+        + '<div class="cards">'+renderCards(sec)+'</div>'
+      + '</div></div>'
+    + '</section>';
+  }).join('');
+  updateGlobalPending();
+}
+function updateGlobalPending(){
+  const total = data.salaryRaises.length + data.bonusDeduct.length + data.other.length + data.terminations.length;
+  document.getElementById('globalPending').textContent = total===0 ? 'All actioned' : (total+' awaiting action');
+}
+document.getElementById('sections').addEventListener('click', e=>{
+  const avEl = e.target.closest('.avatar');
+  if(avEl){ window.__openAvatar(avEl); return; }
+  const toggle = e.target.closest('[data-toggle]');
+  if(toggle){ const k=toggle.getAttribute('data-toggle'); openState[k]=!openState[k]; const sec=toggle.closest('.section'); sec.classList.toggle('open',openState[k]); toggle.setAttribute('aria-expanded',openState[k]); return; }
+  const tb = e.target.closest('[data-tb]');
+  if(tb){ const key=tb.getAttribute('data-key'); const type=tb.getAttribute('data-tb'); if(type==='selectAll') toggleSelectAll(key); else if(type==='bulk') bulkAction(key); return; }
+  const act = e.target.closest('[data-action]');
+  if(act){ const action=act.getAttribute('data-action'); const id=act.getAttribute('data-id'); if(action==='take'){ openModal(id); return; } doAction(action, act.getAttribute('data-key'), id); return; }
+});
+document.getElementById('sections').addEventListener('change', e=>{
+  const cb = e.target.closest('input[type=checkbox]'); if(!cb) return;
+  const key=cb.getAttribute('data-key'); const id=cb.getAttribute('data-id');
+  if(cb.checked) selected[key].add(id); else selected[key].delete(id);
+  render();
+});
+render();
+</script>
+</body>
+</html>
