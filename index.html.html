@@ -174,7 +174,6 @@
   .toast .t-icn{width:18px;height:18px;flex:none}
   .toast .t-icn.ok{color:#5be3a0} .toast .t-icn.no{color:#ff9b9b}
   .toast span{min-width:0}
-  .toast .undo{background:rgba(255,255,255,.16);border:0;color:#fff;font-family:inherit;font-weight:700;font-size:12.5px;padding:6px 12px;border-radius:8px;cursor:pointer;margin-left:2px;flex:none}
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
   .cur{display:inline-block;font-weight:700;font-size:11px;line-height:1.35;letter-spacing:.02em;padding:1px 5px;border-radius:5px;margin-right:4px}
   .cur-AED{background:#e6e8fd;color:#4338ca}
@@ -397,18 +396,10 @@ function sortBySalary(arr){ return arr.sort((a,b)=> aedEq(b.salary.v,b.salary.c)
 sortByAmt(data.salaryRaises); sortByAmt(data.terminations);
 
 /* ---- shared actions (identical to v2, except: every termination row is now selectable, not only zero-amount ones) ---- */
-let lastRemoval = null;
 function removeRecords(key, ids){
   const items = []; const kept = [];
   data[key].forEach((r,idx)=>{ if(ids.includes(r.id)){ items.push({record:r, index:idx}); selected[key].delete(r.id); } else kept.push(r); });
-  data[key] = kept; lastRemoval = {key, items}; render(); return items.length;
-}
-function undoLast(){
-  if(!lastRemoval) return;
-  const {key, items} = lastRemoval;
-  items.slice().sort((a,b)=>a.index-b.index).forEach(it=>{ data[key].splice(Math.min(it.index, data[key].length), 0, it.record); });
-  lastRemoval = null; render();
-  showToast('Restored '+items.length+' record'+(items.length>1?'s':''), 'ok', false);
+  data[key] = kept; render(); return items.length;
 }
 function doAction(action, key, id){
   const rec = data[key].find(r=>r.id===id); const name = rec?rec.name:'record';
@@ -496,19 +487,17 @@ document.getElementById('rejectConfirm').addEventListener('click', ()=>{
 
 /* ---- toast ---- */
 let toastTimer=null;
-function showToast(msg, kind, withUndo){
-  if(withUndo===undefined) withUndo=true;
+function showToast(msg, kind){
   const wrap = document.getElementById('toastWrap'); wrap.innerHTML='';
   const t = document.createElement('div'); t.className='toast';
   const icn = kind==='no'
     ? '<svg class="t-icn no" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">'+I.x+'</svg>'
     : '<svg class="t-icn ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">'+I.check+'</svg>';
-  t.innerHTML = icn + '<span>'+msg+'</span>' + (withUndo?'<button class="undo" id="undoBtn">Undo</button>':'');
+  t.innerHTML = icn + '<span>'+msg+'</span>';
   wrap.appendChild(t);
   requestAnimationFrame(()=>t.classList.add('show'));
-  if(withUndo){ const u=document.getElementById('undoBtn'); if(u) u.addEventListener('click', undoLast); }
   clearTimeout(toastTimer);
-  toastTimer=setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=>{ if(t.parentNode) t.parentNode.removeChild(t); },250); }, withUndo?5000:2600);
+  toastTimer=setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=>{ if(t.parentNode) t.parentNode.removeChild(t); },250); }, 3200);
 }
 
 /* ---- avatar lightbox ---- */
